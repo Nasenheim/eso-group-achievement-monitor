@@ -1,0 +1,8 @@
+## Title: Group Achievement Monitor
+## Author: Nasenheim
+## Version: 0.0.0
+## AddOnVersion: 1
+## APIVersion: 101044
+## IsLibrary: false
+
+GroupAchievementMonitor.lua
