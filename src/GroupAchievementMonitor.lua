@@ -6,6 +6,43 @@ GAM.slashCommand = "/gam"
 
 GAM.selfPlayerName = GetDisplayName()
 
+GAM.SUBMISSION_TYPES = {
+    MANUAL = 1,
+    AUTO = 2
+}
+
+function GAM.acceptAchievementManually(playerEntry)
+    playerEntry.linkedAchievement = GAM.createLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
+    GAM.gui.updateAchievementLabel(playerEntry)
+end
+
+function GAM.rejectAchievementManually(playerEntry)
+    playerEntry.linkedAchievement = nil
+    GAM.gui.updateAchievementLabel(playerEntry)
+end
+
+function GAM.createLinkedAchievement(submissionType)
+    return {
+        submissionType = submissionType
+    }
+end
+
+function GAM.createPlayerEntry(playerName)
+    return {
+        playerName = playerName,
+        linkedAchievement = nil,
+        guiHandle = nil
+    }
+end
+
+function GAM.addPlayerEntry(playerName)
+    local newPlayerEntry = GAM.createPlayerEntry(playerName)
+
+    GAM.gui.addPlayerEntry(newPlayerEntry)
+
+    GAM.playerList[playerName] = newPlayerEntry
+end
+
 function GAM.ProcessSlashCommand()
     if GAM.gui.isMainWindowOpen() then
         GAM.gui.CloseMainWindow()
@@ -25,6 +62,8 @@ function GAM.OnAddOnLoaded(event, addonName)
 
     GAM.Init()
     GAM.gui.Init()
+
+    GAM.addPlayerEntry(GAM.selfPlayerName)
 
     EVENT_MANAGER:UnregisterForEvent(GAM.name, EVENT_ADD_ON_LOADED)
 end

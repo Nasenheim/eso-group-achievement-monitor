@@ -38,3 +38,55 @@ end
 function GAMGui.isMainWindowOpen()
     return not GroupAchievementMonitorWindow:IsHidden()
 end
+
+function GAMGui.addPlayerEntry(playerEntry)
+    local guiHandle = {}
+    playerEntry.guiHandle = guiHandle
+
+    guiHandle.control = CreateControlFromVirtual(
+        "$(parent)PlayerEntry",
+        GAMGui.playerList,
+        "GroupAchievementMonitorPlayerEntryTemplate"
+    )
+
+    guiHandle.display = GetControl(guiHandle.control, "Display")
+
+    guiHandle.nameLabel = GetControl(guiHandle.display, "Name")
+    guiHandle.nameLabel:SetText(playerEntry.playerName)
+
+    guiHandle.achievementLabel = GetControl(guiHandle.display, "Achievement")
+    GAMGui.updateAchievementLabel(playerEntry)
+
+    guiHandle.edit = GetControl(guiHandle.control, "Edit")
+
+    guiHandle.editAcceptManuallyButton = GetControl(guiHandle.edit, "AcceptManually")
+    guiHandle.editAcceptManuallyButton:SetHandler(
+        "OnMouseUp",
+        function(self)
+            GAM.acceptAchievementManually(playerEntry)
+        end,
+        GAMGui.name
+    )
+    guiHandle.editRejectManuallyButton = GetControl(guiHandle.edit, "RejectManually")
+    guiHandle.editRejectManuallyButton:SetHandler(
+        "OnMouseUp",
+        function(self)
+            GAM.rejectAchievementManually(playerEntry)
+        end,
+        GAMGui.name
+    )
+end
+
+function GAMGui.updateAchievementLabel(playerEntry)
+    local newLabel = "→ "
+
+    if not playerEntry.linkedAchievement then
+        newLabel = newLabel .. "No achievement linked."
+    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.AUTO then
+        newLabel = newLabel .. "Auto"
+    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.MANUAL then
+        newLabel = newLabel .. "Manually accepted."
+    end
+
+    playerEntry.guiHandle.achievementLabel:SetText(newLabel)
+end
