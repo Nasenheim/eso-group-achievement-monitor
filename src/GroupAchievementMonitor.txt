@@ -5,4 +5,7 @@
 ## APIVersion: 101044
 ## IsLibrary: false
 
+GroupAchievementMonitor.xml
+
+GroupAchievementMonitorGui.lua
 GroupAchievementMonitor.lua
