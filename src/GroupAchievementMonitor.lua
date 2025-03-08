@@ -15,23 +15,23 @@ function GAM.OnChatMessage(eventId, channelType, fromName, text, isCustomerServi
     d("New Chat Message.")
 end
 
-function GAM.acceptAchievementManually(playerEntry)
-    playerEntry.linkedAchievement = GAM.createLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
-    GAM.gui.updateAchievementLabel(playerEntry)
+function GAM.AcceptAchievementManually(playerEntry)
+    playerEntry.linkedAchievement = GAM.CreateLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
+    GAM.gui.UpdateAchievementLabel(playerEntry)
 end
 
-function GAM.rejectAchievementManually(playerEntry)
+function GAM.RejectAchievementManually(playerEntry)
     playerEntry.linkedAchievement = nil
-    GAM.gui.updateAchievementLabel(playerEntry)
+    GAM.gui.UpdateAchievementLabel(playerEntry)
 end
 
-function GAM.createLinkedAchievement(submissionType)
+function GAM.CreateLinkedAchievement(submissionType)
     return {
         submissionType = submissionType
     }
 end
 
-function GAM.createPlayerEntry(playerName)
+function GAM.CreatePlayerEntry(playerName)
     return {
         playerName = playerName,
         linkedAchievement = nil,
@@ -39,16 +39,16 @@ function GAM.createPlayerEntry(playerName)
     }
 end
 
-function GAM.addPlayerEntry(playerName)
-    local newPlayerEntry = GAM.createPlayerEntry(playerName)
+function GAM.AddPlayerEntry(playerName)
+    local newPlayerEntry = GAM.CreatePlayerEntry(playerName)
 
-    GAM.gui.addPlayerEntry(newPlayerEntry)
+    GAM.gui.AddPlayerEntry(newPlayerEntry)
 
     GAM.playerList[playerName] = newPlayerEntry
 end
 
 function GAM.ProcessSlashCommand()
-    if GAM.gui.isMainWindowOpen() then
+    if GAM.gui.IsMainWindowOpen() then
         GAM.gui.CloseMainWindow()
     else
         GAM.gui.OpenMainWindow()
@@ -69,7 +69,7 @@ function GAM.OnAddOnLoaded(event, addonName)
     GAM.Init()
     GAM.gui.Init()
 
-    GAM.addPlayerEntry(GAM.selfPlayerName)
+    GAM.AddPlayerEntry(GAM.selfPlayerName)
 
     EVENT_MANAGER:UnregisterForEvent(GAM.name, EVENT_ADD_ON_LOADED)
 end

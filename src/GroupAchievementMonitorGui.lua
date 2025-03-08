@@ -35,11 +35,11 @@ function GAMGui.CloseMainWindow()
     PlaySound(SOUNDS.DEFAULT_WINDOW_CLOSE)
 end
 
-function GAMGui.isMainWindowOpen()
+function GAMGui.IsMainWindowOpen()
     return not GroupAchievementMonitorWindow:IsHidden()
 end
 
-function GAMGui.addPlayerEntry(playerEntry)
+function GAMGui.AddPlayerEntry(playerEntry)
     local guiHandle = {}
     playerEntry.guiHandle = guiHandle
 
@@ -55,7 +55,7 @@ function GAMGui.addPlayerEntry(playerEntry)
     guiHandle.nameLabel:SetText(playerEntry.playerName)
 
     guiHandle.achievementLabel = GetControl(guiHandle.display, "Achievement")
-    GAMGui.updateAchievementLabel(playerEntry)
+    GAMGui.UpdateAchievementLabel(playerEntry)
 
     guiHandle.edit = GetControl(guiHandle.control, "Edit")
 
@@ -63,7 +63,7 @@ function GAMGui.addPlayerEntry(playerEntry)
     guiHandle.editAcceptManuallyButton:SetHandler(
         "OnMouseUp",
         function(self)
-            GAM.acceptAchievementManually(playerEntry)
+            GAM.AcceptAchievementManually(playerEntry)
         end,
         GAMGui.name
     )
@@ -71,13 +71,13 @@ function GAMGui.addPlayerEntry(playerEntry)
     guiHandle.editRejectManuallyButton:SetHandler(
         "OnMouseUp",
         function(self)
-            GAM.rejectAchievementManually(playerEntry)
+            GAM.RejectAchievementManually(playerEntry)
         end,
         GAMGui.name
     )
 end
 
-function GAMGui.updateAchievementLabel(playerEntry)
+function GAMGui.UpdateAchievementLabel(playerEntry)
     local newLabel = "→ "
 
     if not playerEntry.linkedAchievement then
