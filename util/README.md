@@ -1,4 +1,4 @@
-# Build
+# Utilities
 
 To make the process of Addon development easier, this directory contains scripts to automatically install and uninstall the current state of development in the live AddOn directory of Elder Scrolls Online.
 
@@ -24,10 +24,10 @@ To track which AddOn setup is active the empty files you need to create the empt
 
 To install the current state of development you can run the following in the terminal from the root folder.
 
-`sudo sh build/install_dev.sh`
+`sudo sh util/install_dev.sh`
 
 ## Uninstall
 
 To uninstall the current state of development and reinstall your usual AddOns you can run the following in the terminal from the root folder.
 
-`sudo sh build/uninstall_dev.sh`
+`sudo sh util/uninstall_dev.sh`
