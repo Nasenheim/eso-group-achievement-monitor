@@ -1,0 +1,134 @@
+<GuiXml
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://sir.insidi.at/or/schema/esoui.xsd"
+>
+    <Controls>
+        <TopLevelControl
+            name="GroupAchievementMonitorWindow"
+            tier="MEDIUM"
+            layer="CONTROLS"
+            mouseEnabled="true"
+            movable="true"
+            clampedToScreen="true"
+            hidden="true"
+        >
+            <Dimensions x="500" y="800" />
+            <Anchor point="CENTER" relativeTo="GuiRoot" relativePoint="CENTER" />
+
+            <Controls>
+                <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.75" />
+
+                <Control name="$(parent)Header">
+                    <Dimensions x="480" y="50" />
+                    <Anchor point="TOP" relativeTo="$(parent)" relativePoint="TOP" />
+                    <Controls>
+                        <Label
+                            name="$(parent)Title"
+                            font="ZoFontHeader2"
+                            text="Group Achievement Monitor"
+                        >
+                            <Anchor point="CENTER" relativeTo="$(parent)" relativePoint="CENTER" />
+                        </Label>
+                        <Button name="$(parent)Hide" inherits="ZO_ButtonBehaviorClickSound">
+                            <Dimensions x="24" y="24" />
+                            <Anchor point="RIGHT" relativeTo="$(parent)" relativePoint="RIGHT" />
+                            <Textures normal="/esoui/art/buttons/decline_up.dds"
+                                pressed="/esoui/art/buttons/decline_down.dds"
+                                mouseOver="/esoui/art/buttons/decline_over.dds"
+                                disabled="/esoui/art/buttons/decline_disabled.dds" />
+                        </Button>
+                    </Controls>
+                </Control>
+
+                <Texture name="$(parent)HeaderDivider"
+                    textureFile="/esoui/art/miscellaneous/centerscreen_topdivider.dds">
+                    <Dimensions x="480" y="2" />
+                    <Anchor point="TOP" relativeTo="$(parent)Header" relativePoint="BOTTOM" />
+                </Texture>
+
+                <Control name="$(parent)Options">
+                    <Dimensions x="470" y="150" />
+                    <Anchor point="TOP" relativeTo="$(parent)HeaderDivider" relativePoint="BOTTOM"
+                        offsetY="10" />
+                    <Controls>
+                        <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25" />
+                    </Controls>
+                </Control>
+
+                <Texture
+                    name="$(parent)OptionsDivider"
+                    textureFile="/esoui/art/miscellaneous/horizontaldivider.dds">
+                    <Dimensions x="480" y="2" />
+                    <Anchor point="TOP" relativeTo="$(parent)Options" relativePoint="BOTTOM"
+                        offsetY="10" />
+                </Texture>
+
+                <Control name="$(parent)PlayerList">
+                    <Dimensions x="470" y="0" />
+                    <Anchor point="TOP" relativeTo="$(parent)OptionsDivider" relativePoint="BOTTOM"
+                        offsetY="10" />
+                    <Anchor point="BOTTOM" relativeTo="$(parent)" relativePoint="BOTTOM"
+                        offsetY="-10" />
+                    <Controls>
+                        <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25" />
+                    </Controls>
+                </Control>
+            </Controls>
+        </TopLevelControl>
+
+        <Control name="GroupAchievementMonitorPlayerEntryTemplate" virtual="true">
+            <Dimensions x="470" y="40" />
+            <Anchor point="TOP" relativeTo="$(parent)" relativePoint="TOP" />
+            <Controls>
+                <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25" />
+
+                <Control name="$(parent)Display">
+                    <Dimensions x="410" y="40" />
+                    <Anchor point="LEFT" relativeTo="$(parent)" relativePoint="LEFT" />
+                    <Controls>
+                        <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25" />
+
+                        <Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
+                            <Dimensions x="390" y="20" />
+                            <Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+                        </Label>
+                        <Label name="$(parent)Achievement" font="ZoFontGame" wrapMode="ELLIPSIS">
+                            <Dimensions x="390" y="20" />
+                            <Anchor point="TOP" relativeTo="$(parent)Name" relativePoint="BOTTOM"
+                                offsetX="15" />
+                        </Label>
+                    </Controls>
+                </Control>
+
+                <Control name="$(parent)Edit">
+                    <Dimensions x="60" y="40" />
+                    <Anchor point="LEFT" relativeTo="$(parent)Display" relativePoint="RIGHT" />
+                    <Controls>
+                        <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25" />
+
+                        <Button name="$(parent)AcceptManually"
+                            inherits="ZO_ButtonBehaviorClickSound">
+                            <Dimensions x="24" y="24" />
+                            <Anchor point="LEFT" relativeTo="$(parent)" relativePoint="LEFT" />
+                            <Textures normal="/esoui/art/buttons/accept_up.dds"
+                                pressed="/esoui/art/buttons/accept_down.dds"
+                                mouseOver="/esoui/art/buttons/accept_over.dds"
+                                disabled="/esoui/art/buttons/accept_disabled.dds" />
+                        </Button>
+
+                        <Button name="$(parent)RejectManually"
+                            inherits="ZO_ButtonBehaviorClickSound">
+                            <Dimensions x="24" y="24" />
+                            <Anchor point="LEFT" relativeTo="$(parent)AcceptManually"
+                                relativePoint="RIGHT" offsetX="10" />
+                            <Textures normal="/esoui/art/buttons/decline_up.dds"
+                                pressed="/esoui/art/buttons/decline_down.dds"
+                                mouseOver="/esoui/art/buttons/decline_over.dds"
+                                disabled="/esoui/art/buttons/decline_disabled.dds" />
+                        </Button>
+                    </Controls>
+                </Control>
+            </Controls>
+        </Control>
+    </Controls>
+</GuiXml>
