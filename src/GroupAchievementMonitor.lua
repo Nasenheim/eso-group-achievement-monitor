@@ -11,6 +11,10 @@ GAM.SUBMISSION_TYPES = {
     AUTO = 2
 }
 
+function GAM.OnChatMessage(eventId, channelType, fromName, text, isCustomerService, fromDisplayName)
+    d("New Chat Message.")
+end
+
 function GAM.acceptAchievementManually(playerEntry)
     playerEntry.linkedAchievement = GAM.createLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
     GAM.gui.updateAchievementLabel(playerEntry)
@@ -55,6 +59,8 @@ function GAM.Init()
     GAM.playerList = {}
 
     SLASH_COMMANDS[GAM.slashCommand] = GAM.ProcessSlashCommand
+
+    EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_CHAT_MESSAGE_CHANNEL, GAM.OnChatMessage)
 end
 
 function GAM.OnAddOnLoaded(event, addonName)
