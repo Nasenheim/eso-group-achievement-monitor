@@ -23,6 +23,35 @@ function GAMGui.SetupWindow()
     )
 
     GAMGui.playerList = GetControl(GroupAchievementMonitorWindow, "PlayerList")
+
+    GAMGui.playerEntryHandles = {}
+    for i = 1, GAM.MAX_PLAYER_COUNT do
+        local newPlayerEntryHandle = {}
+        GAMGui.playerEntryHandles[i] = newPlayerEntryHandle
+
+        newPlayerEntryHandle.control = CreateControlFromVirtual(
+            "$(parent)Entry" .. i,
+            GAMGui.playerList,
+            "GroupAchievementMonitorPlayerListEntryTemplate"
+        )
+        if i > 1 then
+            newPlayerEntryHandle.control:ClearAnchors()
+            newPlayerEntryHandle.control:SetAnchor(TOP, GAMGui.playerEntryHandles[i - 1].control, BOTTOM, 0, 5)
+        end
+
+        newPlayerEntryHandle.display = GetControl(newPlayerEntryHandle.control, "Display")
+
+        newPlayerEntryHandle.nameLabel = GetControl(newPlayerEntryHandle.display, "Name")
+        newPlayerEntryHandle.nameLabel:SetText("@PlayerName")
+
+        newPlayerEntryHandle.achievementLabel = GetControl(newPlayerEntryHandle.display, "Achievement")
+        newPlayerEntryHandle.achievementLabel:SetText("→ Achievement")
+
+        newPlayerEntryHandle.edit = GetControl(newPlayerEntryHandle.control, "Edit")
+
+        newPlayerEntryHandle.editAcceptManuallyButton = GetControl(newPlayerEntryHandle.edit, "AcceptManually")
+        newPlayerEntryHandle.editRejectManuallyButton = GetControl(newPlayerEntryHandle.edit, "RejectManually")
+    end
 end
 
 function GAMGui.OpenMainWindow()
@@ -39,36 +68,36 @@ function GAMGui.IsMainWindowOpen()
     return not GroupAchievementMonitorWindow:IsHidden()
 end
 
-function GAMGui.AddPlayerEntry(playerEntry)
-    local guiHandle = {}
-    playerEntry.guiHandle = guiHandle
+function GAMGui.SyncPlayerEntries()
+    for _, playerEntry in pairs(GAM.playerList) do
+        GAMGui.UpdatePlayerEntry(playerEntry)
+    end
 
-    guiHandle.control = CreateControlFromVirtual(
-        "$(parent)PlayerEntry",
-        GAMGui.playerList,
-        "GroupAchievementMonitorPlayerEntryTemplate"
-    )
+    for index = GAM.groupSize + 1, GAM.MAX_PLAYER_COUNT do
+        local playerEntryHandle = GAMGui.playerEntryHandles[index]
 
-    guiHandle.display = GetControl(guiHandle.control, "Display")
+        playerEntryHandle.control:SetHidden(true)
+    end
+end
 
-    guiHandle.nameLabel = GetControl(guiHandle.display, "Name")
-    guiHandle.nameLabel:SetText(playerEntry.playerName)
+function GAMGui.UpdatePlayerEntry(playerEntry)
+    local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
 
-    guiHandle.achievementLabel = GetControl(guiHandle.display, "Achievement")
-    GAMGui.UpdateAchievementLabel(playerEntry)
+    playerEntryHandle.control:SetHidden(false)
 
-    guiHandle.edit = GetControl(guiHandle.control, "Edit")
+    playerEntryHandle.nameLabel:SetText(playerEntry.playerName)
 
-    guiHandle.editAcceptManuallyButton = GetControl(guiHandle.edit, "AcceptManually")
-    guiHandle.editAcceptManuallyButton:SetHandler(
+    local newAchievementLabelString = GAMGui.GetAchievementLabelString(playerEntry)
+    playerEntryHandle.achievementLabel:SetText(newAchievementLabelString)
+
+    playerEntryHandle.editAcceptManuallyButton:SetHandler(
         "OnMouseUp",
         function(self)
             GAM.AcceptAchievementManually(playerEntry)
         end,
         GAMGui.name
     )
-    guiHandle.editRejectManuallyButton = GetControl(guiHandle.edit, "RejectManually")
-    guiHandle.editRejectManuallyButton:SetHandler(
+    playerEntryHandle.editRejectManuallyButton:SetHandler(
         "OnMouseUp",
         function(self)
             GAM.RejectAchievementManually(playerEntry)
@@ -77,16 +106,27 @@ function GAMGui.AddPlayerEntry(playerEntry)
     )
 end
 
+function GAMGui.GetPlayerEntryHandle(playerEntry)
+    return GAMGui.playerEntryHandles[playerEntry.index]
+end
+
 function GAMGui.UpdateAchievementLabel(playerEntry)
-    local newLabel = "→ "
+    local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
+
+    local newLabelString = GAMGui.GetAchievementLabelString(playerEntry)
+    playerEntryHandle.achievementLabel:SetText(newLabelString)
+end
+
+function GAMGui.GetAchievementLabelString(playerEntry)
+    local newLabelString = "→ "
 
     if not playerEntry.linkedAchievement then
-        newLabel = newLabel .. "No achievement linked."
+        newLabelString = newLabelString .. "No achievement linked."
     elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.AUTO then
-        newLabel = newLabel .. "Auto"
+        newLabelString = newLabelString .. "Auto"
     elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.MANUAL then
-        newLabel = newLabel .. "Manually accepted."
+        newLabelString = newLabelString .. "Manually accepted."
     end
 
-    playerEntry.guiHandle.achievementLabel:SetText(newLabel)
+    return newLabelString
 end
