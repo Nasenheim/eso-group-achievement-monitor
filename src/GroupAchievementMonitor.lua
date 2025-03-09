@@ -8,6 +8,7 @@ GAM.selfPlayerName = GetDisplayName()
 GAM.groupSize = 0
 
 GAM.MAX_PLAYER_COUNT = 12
+GAM.MIN_PLAYER_COUNT = 2
 GAM.SUBMISSION_TYPES = {
     MANUAL = 1,
     AUTO = 2
@@ -52,18 +53,23 @@ end
 
 function GAM.SyncGroupMembers()
     GAM.playerList = {}
-
     GAM.groupSize = GetGroupSize()
-    for index = 1, GAM.groupSize do
-        local unitTag = GetGroupUnitTagByIndex(index)
 
-        if unitTag then
-            local displayName = GetUnitDisplayName(unitTag)
+    if GAM.groupSize < GAM.MIN_PLAYER_COUNT then
+        GAM.groupSize = 0
+        GAM.AddGroupMember(GAM.selfPlayerName)
+    else
+        for index = 1, GAM.groupSize do
+            local unitTag = GetGroupUnitTagByIndex(index)
 
-            local newPlayerEntry = GAM.CreatePlayerEntry(index, displayName)
-            GAM.playerList[displayName] = newPlayerEntry
-        else
-            d("Could not find GroupUnitTag " .. index)
+            if unitTag then
+                local displayName = GetUnitDisplayName(unitTag)
+
+                local newPlayerEntry = GAM.CreatePlayerEntry(index, displayName)
+                GAM.playerList[displayName] = newPlayerEntry
+            else
+                d("Could not find GroupUnitTag " .. index)
+            end
         end
     end
 
@@ -102,7 +108,7 @@ function GAM.OnAddOnLoaded(event, addonName)
     GAM.Init()
     GAM.gui.Init()
 
-    -- GAM.gui.SyncGroupMembers()
+    GAM.SyncGroupMembers()
 
     EVENT_MANAGER:UnregisterForEvent(GAM.name, EVENT_ADD_ON_LOADED)
 end
