@@ -51,6 +51,28 @@ function GAM.AddGroupMember(playerName)
     GAM.gui.UpdatePlayerEntry(newPlayerEntry)
 end
 
+function GAM.RemoveGroupMember(playerName)
+    local playerEntryToRemove = GAM.playerList[playerName]
+
+    if not playerEntryToRemove then
+        return
+    end
+
+    GAM.groupSize = GAM.groupSize - 1
+    for _, playerEntry in pairs(GAM.playerList) do
+        if playerEntry.index > GAM.groupSize then
+            GAM.gui.HidePlayerEntryHandle(playerEntry)
+        end
+
+        if playerEntry.index > playerEntryToRemove.index then
+            playerEntry.index = playerEntry.index - 1
+            GAM.gui.UpdatePlayerEntry(playerEntry)
+        end
+    end
+
+    GAM.playerList[playerName] = nil
+end
+
 function GAM.SyncGroupMembers()
     GAM.playerList = {}
     GAM.groupSize = GetGroupSize()
@@ -84,6 +106,14 @@ function GAM.OnGroupMemberJoined(eventCode, memberCharacterName, memberDisplayNa
     end
 end
 
+function GAM.OnGroupMemberLeft(eventCode, memberCharacterName, reason, isLocalPlayer, isLeader, memberDisplayName)
+    if memberDisplayName == GAM.selfPlayerName then
+        GAM.SyncGroupMembers()
+    else
+        GAM.RemoveGroupMember(memberDisplayName)
+    end
+end
+
 function GAM.ProcessSlashCommand()
     if GAM.gui.IsMainWindowOpen() then
         GAM.gui.CloseMainWindow()
@@ -99,6 +129,7 @@ function GAM.Init()
     -- SLASH_COMMANDS["/gam_sync"] = GAM.SyncGroupMembers
 
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_JOINED, GAM.OnGroupMemberJoined)
+    EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_LEFT, GAM.OnGroupMemberLeft)
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_CHAT_MESSAGE_CHANNEL, GAM.OnChatMessage)
 end
 

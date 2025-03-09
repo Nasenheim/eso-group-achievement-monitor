@@ -106,6 +106,11 @@ function GAMGui.UpdatePlayerEntry(playerEntry)
     )
 end
 
+function GAMGui.HidePlayerEntryHandle(playerEntry)
+    local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
+    playerEntryHandle.control:SetHidden(true)
+end
+
 function GAMGui.GetPlayerEntryHandle(playerEntry)
     return GAMGui.playerEntryHandles[playerEntry.index]
 end
