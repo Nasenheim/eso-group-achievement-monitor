@@ -39,6 +39,8 @@ function GAMGui.SetupWindow()
             newPlayerEntryHandle.control:SetAnchor(TOP, GAMGui.playerEntryHandles[i - 1].control, BOTTOM, 0, 5)
         end
 
+        newPlayerEntryHandle.controlBackdrop = GetControl(newPlayerEntryHandle.control, "BG")
+
         newPlayerEntryHandle.display = GetControl(newPlayerEntryHandle.control, "Display")
 
         newPlayerEntryHandle.nameLabel = GetControl(newPlayerEntryHandle.display, "Name")
@@ -51,7 +53,30 @@ function GAMGui.SetupWindow()
 
         newPlayerEntryHandle.editAcceptManuallyButton = GetControl(newPlayerEntryHandle.edit, "AcceptManually")
         newPlayerEntryHandle.editRejectManuallyButton = GetControl(newPlayerEntryHandle.edit, "RejectManually")
+
+        GAMGui.SetupPlayerListEntryHandleEventHandlers(newPlayerEntryHandle)
     end
+end
+
+function GAMGui.SetupPlayerListEntryHandleEventHandlers(playerEntryHandle)
+    playerEntryHandle.control:SetHandler("OnMouseEnter", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(false)
+    end, GAMGui.name)
+    playerEntryHandle.control:SetHandler("OnMouseExit", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(true)
+    end, GAMGui.name)
+    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseEnter", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(false)
+    end, GAMGui.name)
+    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseExit", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(true)
+    end, GAMGui.name)
+    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseEnter", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(false)
+    end, GAMGui.name)
+    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseExit", function(self)
+        playerEntryHandle.controlBackdrop:SetHidden(true)
+    end, GAMGui.name)
 end
 
 function GAMGui.OpenMainWindow()
@@ -90,20 +115,16 @@ function GAMGui.UpdatePlayerEntry(playerEntry)
     local newAchievementLabelString = GAMGui.GetAchievementLabelString(playerEntry)
     playerEntryHandle.achievementLabel:SetText(newAchievementLabelString)
 
-    playerEntryHandle.editAcceptManuallyButton:SetHandler(
-        "OnMouseUp",
-        function(self)
-            GAM.AcceptAchievementManually(playerEntry)
-        end,
-        GAMGui.name
-    )
-    playerEntryHandle.editRejectManuallyButton:SetHandler(
-        "OnMouseUp",
-        function(self)
-            GAM.RejectAchievementManually(playerEntry)
-        end,
-        GAMGui.name
-    )
+    GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHandle)
+end
+
+function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHandle)
+    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseUp", function(self)
+        GAM.AcceptAchievementManually(playerEntry)
+    end, GAMGui.name)
+    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseUp", function(self)
+        GAM.RejectAchievementManually(playerEntry)
+    end, GAMGui.name)
 end
 
 function GAMGui.HidePlayerEntryHandle(playerEntry)
