@@ -146,11 +146,11 @@ end
 function GAMGui.GetAchievementLabelString(playerEntry)
     local newLabelString = "→ "
 
-    if not playerEntry.linkedAchievement then
+    if not playerEntry.selectedLinkedAchievement then
         newLabelString = newLabelString .. "No achievement linked."
-    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.AUTO then
+    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
         newLabelString = newLabelString .. "Auto"
-    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.MANUAL then
+    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
         newLabelString = newLabelString .. "Manually accepted."
     end
 

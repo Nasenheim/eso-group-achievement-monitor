@@ -14,23 +14,107 @@ GAM.SUBMISSION_TYPES = {
     AUTO = 2
 }
 
+GAM.ACHIEVEMENT_TEXT_MATCH_STRING = "|H(%d):achievement:(%d+):(%d+):(%d+)|h(.-)|h"
+
+function GAM.ExtractLinkedAchievementsFromText(text)
+    local achievements = {}
+    local achievementCount = 0
+
+    for type, achievementId, progress, timestamp in string.gmatch(
+        text,
+        GAM.ACHIEVEMENT_TEXT_MATCH_STRING
+    ) do
+        local newType = tonumber(type)
+        local newAchievementId = tonumber(achievementId)
+        local newProgress = tonumber(progress)
+        local newTimestamp = tonumber(timestamp)
+
+        local newAchievementLink = GAM.CreateAchievementLink(
+            newType,
+            newAchievementId,
+            newProgress,
+            newTimestamp
+        )
+        local newLinkedAchievement = GAM.CreateLinkedAchievement(
+            GAM.SUBMISSION_TYPES.AUTO,
+            newAchievementLink
+        )
+
+        achievementCount = achievementCount + 1
+        achievements[achievementCount] = newLinkedAchievement
+    end
+
+    return achievements
+end
+
 function GAM.OnChatMessage(eventId, channelType, fromName, text, isCustomerService, fromDisplayName)
     d("New Chat Message.")
+    local playerEntry = GAM.playerList[fromDisplayName]
+
+    if not playerEntry then
+        return
+    end
+
+    local linkedAchievements = GAM.ExtractLinkedAchievementsFromText(text)
+
+    for _, linkedAchievement in pairs(linkedAchievements) do
+        GAM.AddLinkedAchievement(playerEntry, linkedAchievement)
+    end
+end
+
+function GAM.AddLinkedAchievement(playerEntry, linkedAchievement)
+    playerEntry.linkedAchievementsCount = playerEntry.linkedAchievementsCount + 1
+    playerEntry.linkedAchievements[playerEntry.linkedAchievementsCount] = linkedAchievement
+
+    if linkedAchievement.isValid then
+        playerEntry.selectedLinkedAchievement = linkedAchievement
+    end
+
+    GAM.gui.UpdateAchievementLabel(playerEntry)
 end
 
 function GAM.AcceptAchievementManually(playerEntry)
-    playerEntry.linkedAchievement = GAM.CreateLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
-    GAM.gui.UpdateAchievementLabel(playerEntry)
+    local newLinkedAchievement = GAM.CreateLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL, nil)
+    GAM.AddLinkedAchievement(playerEntry, newLinkedAchievement)
 end
 
 function GAM.RejectAchievementManually(playerEntry)
-    playerEntry.linkedAchievement = nil
+    for _, linkedAchievement in pairs(playerEntry.linkedAchievements) do
+        linkedAchievement.isValid = false
+    end
+
+    playerEntry.selectedLinkedAchievement = nil
+
     GAM.gui.UpdateAchievementLabel(playerEntry)
 end
 
-function GAM.CreateLinkedAchievement(submissionType)
+function GAM.CreateAchievementLink(linkType, achievementId, progress, timestamp)
+    local date, time = FormatAchievementLinkTimestamp(tostring(timestamp))
+
     return {
-        submissionType = submissionType
+        linkType = linkType,
+        achievementId = achievementId,
+        progress = progress,
+        timestamp = timestamp,
+        date = date,
+        time = time
+    }
+end
+
+function GAM.CreateLinkedAchievement(submissionType, achievementLink)
+    local name = nil
+    if achievementLink then
+        name = GetAchievementInfo(achievementLink.achievementId)
+    end
+
+    return {
+        name = name,
+        submission = {
+            type = submissionType,
+            createdAt = os.clock()
+        },
+        achievementLink = achievementLink,
+        isValid = true
     }
 end
 
@@ -38,7 +122,9 @@ function GAM.CreatePlayerEntry(index, playerName)
     return {
         index = index,
         playerName = playerName,
-        linkedAchievement = nil
+        selectedLinkedAchievement = nil,
+        linkedAchievements = {},
+        linkedAchievementsCount = 0
     }
 end
 
@@ -106,7 +192,14 @@ function GAM.OnGroupMemberJoined(eventCode, memberCharacterName, memberDisplayNa
     end
 end
 
-function GAM.OnGroupMemberLeft(eventCode, memberCharacterName, reason, isLocalPlayer, isLeader, memberDisplayName)
+function GAM.OnGroupMemberLeft(
+    eventCode,
+    memberCharacterName,
+    reason,
+    isLocalPlayer,
+    isLeader,
+    memberDisplayName
+)
     if memberDisplayName == GAM.selfPlayerName then
         GAM.SyncGroupMembers()
     else
