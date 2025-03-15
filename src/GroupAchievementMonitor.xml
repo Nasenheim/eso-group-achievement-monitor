@@ -92,15 +92,29 @@
                         <!-- <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25"
                         /> -->
 
-                        <Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
-                            <Dimensions x="380" y="20" />
+                        <Label name="$(parent)PlayerName" font="ZoFontGame" wrapMode="ELLIPSIS">
+                            <Dimensions x="390" y="20" />
                             <Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+                        </Label>
+
+                        <Label name="$(parent)IndentedArrow" font="ZoFontGame" text="→">
+                            <Dimensions x="20" y="20" />
+                            <Anchor point="TOPLEFT" relativeTo="$(parent)PlayerName"
+                                relativePoint="BOTTOMLEFT"
+                                offsetX="10" />
                         </Label>
                         <Label name="$(parent)Achievement" font="ZoFontGame" wrapMode="ELLIPSIS"
                             linkEnabled="true" mouseEnabled="true">
-                            <Dimensions x="380" y="20" />
-                            <Anchor point="TOP" relativeTo="$(parent)Name" relativePoint="BOTTOM"
-                                offsetX="15" />
+                            <Dimensions x="235" y="20" />
+                            <Anchor point="LEFT" relativeTo="$(parent)IndentedArrow"
+                                relativePoint="RIGHT"
+                            />
+                        </Label>
+                        <Label name="$(parent)AchievementDate" font="ZoFontGame"
+                            horizontalAlignment="RIGHT">
+                            <Dimensions x="120" y="20" />
+                            <Anchor point="TOPRIGHT" relativeTo="$(parent)PlayerName"
+                                relativePoint="BOTTOMRIGHT" />
                         </Label>
                     </Controls>
                 </Control>
