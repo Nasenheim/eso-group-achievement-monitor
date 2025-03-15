@@ -14,23 +14,22 @@ GAM.SUBMISSION_TYPES = {
     AUTO = 2
 }
 
-GAM.ACHIEVEMENT_TEXT_MATCH_STRING = "|H(%d):achievement:(%d+):(%d+):(%d+)|h(.-)|h"
+GAM.ACHIEVEMENT_LINK_MATCH_STRING = "|H1:achievement:(%d+):(%d+):(%d+)|h(.-)|h"
+GAM.ACHIEVEMENT_LINK_FORMAT_STRING = "|H1:achievement:<<1>>:<<2>>:<<3>>|h|h"
 
 function GAM.ExtractLinkedAchievementsFromText(text)
     local achievements = {}
     local achievementCount = 0
 
-    for type, achievementId, progress, timestamp in string.gmatch(
+    for achievementId, progress, timestamp in string.gmatch(
         text,
-        GAM.ACHIEVEMENT_TEXT_MATCH_STRING
+        GAM.ACHIEVEMENT_LINK_MATCH_STRING
     ) do
-        local newType = tonumber(type)
         local newAchievementId = tonumber(achievementId)
         local newProgress = tonumber(progress)
         local newTimestamp = tonumber(timestamp)
 
         local newAchievementLink = GAM.CreateAchievementLink(
-            newType,
             newAchievementId,
             newProgress,
             newTimestamp
@@ -68,9 +67,9 @@ function GAM.AddLinkedAchievement(playerEntry, linkedAchievement)
 
     if linkedAchievement.isValid then
         playerEntry.selectedLinkedAchievement = linkedAchievement
-    end
 
-    GAM.gui.UpdateAchievementLabel(playerEntry)
+        GAM.gui.UpdatePlayerEntry(playerEntry)
+    end
 end
 
 function GAM.AcceptAchievementManually(playerEntry)
@@ -85,14 +84,21 @@ function GAM.RejectAchievementManually(playerEntry)
 
     playerEntry.selectedLinkedAchievement = nil
 
-    GAM.gui.UpdateAchievementLabel(playerEntry)
+    GAM.gui.UpdatePlayerEntry(playerEntry)
 end
 
-function GAM.CreateAchievementLink(linkType, achievementId, progress, timestamp)
+function GAM.CreateAchievementLink(achievementId, progress, timestamp)
+    local linkString = zo_strformat(
+        GAM.ACHIEVEMENT_LINK_FORMAT_STRING,
+        achievementId,
+        progress,
+        timestamp
+    )
+
     local date, time = FormatAchievementLinkTimestamp(tostring(timestamp))
 
     return {
-        linkType = linkType,
+        linkString = linkString,
         achievementId = achievementId,
         progress = progress,
         timestamp = timestamp,

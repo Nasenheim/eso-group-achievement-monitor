@@ -59,22 +59,19 @@ function GAMGui.SetupWindow()
 end
 
 function GAMGui.SetupPlayerListEntryHandleEventHandlers(playerEntryHandle)
-    playerEntryHandle.control:SetHandler("OnMouseEnter", function(self)
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.control, playerEntryHandle)
+
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.achievementLabel, playerEntryHandle)
+
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.editAcceptManuallyButton, playerEntryHandle)
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.editRejectManuallyButton, playerEntryHandle)
+end
+
+function GAMGui.SetupPlayerListEntryHandleHoverHandlers(control, playerEntryHandle)
+    control:SetHandler("OnMouseEnter", function(self)
         playerEntryHandle.controlBackdrop:SetHidden(false)
     end, GAMGui.name)
-    playerEntryHandle.control:SetHandler("OnMouseExit", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(true)
-    end, GAMGui.name)
-    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseEnter", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(false)
-    end, GAMGui.name)
-    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseExit", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(true)
-    end, GAMGui.name)
-    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseEnter", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(false)
-    end, GAMGui.name)
-    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseExit", function(self)
+    control:SetHandler("OnMouseExit", function(self)
         playerEntryHandle.controlBackdrop:SetHidden(true)
     end, GAMGui.name)
 end
@@ -125,6 +122,22 @@ function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHan
     playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseUp", function(self)
         GAM.RejectAchievementManually(playerEntry)
     end, GAMGui.name)
+
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
+    if selectedLinkedAchievement and selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+        playerEntryHandle.achievementLabel:SetHandler(
+            "OnLinkMouseUp",
+            function(self, linkData, linkText, button, ...)
+                d("# Link mouse up")
+                ZO_LinkHandler_OnLinkMouseUp(
+                    selectedLinkedAchievement.achievementLink.linkString,
+                    button,
+                    self
+                )
+            end,
+            GAMGui.name
+        )
+    end
 end
 
 function GAMGui.HidePlayerEntryHandle(playerEntry)
@@ -136,22 +149,15 @@ function GAMGui.GetPlayerEntryHandle(playerEntry)
     return GAMGui.playerEntryHandles[playerEntry.index]
 end
 
-function GAMGui.UpdateAchievementLabel(playerEntry)
-    local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
-
-    local newLabelString = GAMGui.GetAchievementLabelString(playerEntry)
-    playerEntryHandle.achievementLabel:SetText(newLabelString)
-end
-
 function GAMGui.GetAchievementLabelString(playerEntry)
     local newLabelString = "→ "
 
     if not playerEntry.selectedLinkedAchievement then
         newLabelString = newLabelString .. "No achievement linked."
-    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
-        newLabelString = newLabelString .. "Auto"
     elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
         newLabelString = newLabelString .. "Manually accepted."
+    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+        newLabelString = newLabelString .. playerEntry.selectedLinkedAchievement.achievementLink.linkString
     end
 
     return newLabelString

@@ -78,7 +78,8 @@
             </Controls>
         </TopLevelControl>
 
-        <Control name="GroupAchievementMonitorPlayerListEntryTemplate" virtual="true" mouseEnabled="true">
+        <Control name="GroupAchievementMonitorPlayerListEntryTemplate" virtual="true"
+            mouseEnabled="true">
             <Dimensions x="460" y="40" />
             <Anchor point="TOP" relativeTo="$(parent)" relativePoint="TOP" />
             <Controls>
@@ -95,7 +96,8 @@
                             <Dimensions x="380" y="20" />
                             <Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
                         </Label>
-                        <Label name="$(parent)Achievement" font="ZoFontGame" wrapMode="ELLIPSIS">
+                        <Label name="$(parent)Achievement" font="ZoFontGame" wrapMode="ELLIPSIS"
+                            linkEnabled="true" mouseEnabled="true">
                             <Dimensions x="380" y="20" />
                             <Anchor point="TOP" relativeTo="$(parent)Name" relativePoint="BOTTOM"
                                 offsetX="15" />
