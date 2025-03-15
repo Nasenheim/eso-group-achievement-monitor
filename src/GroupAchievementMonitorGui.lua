@@ -43,11 +43,14 @@ function GAMGui.SetupWindow()
 
         newPlayerEntryHandle.display = GetControl(newPlayerEntryHandle.control, "Display")
 
-        newPlayerEntryHandle.nameLabel = GetControl(newPlayerEntryHandle.display, "Name")
-        newPlayerEntryHandle.nameLabel:SetText("@PlayerName")
+        newPlayerEntryHandle.playerNameLabel = GetControl(newPlayerEntryHandle.display, "PlayerName")
+        newPlayerEntryHandle.playerNameLabel:SetText("@PlayerName")
 
         newPlayerEntryHandle.achievementLabel = GetControl(newPlayerEntryHandle.display, "Achievement")
-        newPlayerEntryHandle.achievementLabel:SetText("→ Achievement")
+        newPlayerEntryHandle.achievementLabel:SetText("Achievement")
+
+        newPlayerEntryHandle.achievementDateLabel = GetControl(newPlayerEntryHandle.display, "AchievementDate")
+        newPlayerEntryHandle.achievementDateLabel:SetText("Date, Time")
 
         newPlayerEntryHandle.edit = GetControl(newPlayerEntryHandle.control, "Edit")
 
@@ -107,10 +110,13 @@ function GAMGui.UpdatePlayerEntry(playerEntry)
 
     playerEntryHandle.control:SetHidden(false)
 
-    playerEntryHandle.nameLabel:SetText(playerEntry.playerName)
+    playerEntryHandle.playerNameLabel:SetText(playerEntry.playerName)
 
     local newAchievementLabelString = GAMGui.GetAchievementLabelString(playerEntry)
     playerEntryHandle.achievementLabel:SetText(newAchievementLabelString)
+
+    local newAchievementDateLabelString = GAMGui.GetAchievementDateLabelString(playerEntry)
+    playerEntryHandle.achievementDateLabel:SetText(newAchievementDateLabelString)
 
     GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHandle)
 end
@@ -126,8 +132,8 @@ function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHan
     local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
     if selectedLinkedAchievement and selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
         playerEntryHandle.achievementLabel:SetHandler(
-            "OnLinkMouseUp",
-            function(self, linkData, linkText, button, ...)
+            "OnMouseUp",
+            function(self, button, ...)
                 d("# Link mouse up")
                 ZO_LinkHandler_OnLinkMouseUp(
                     selectedLinkedAchievement.achievementLink.linkString,
@@ -137,6 +143,8 @@ function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHan
             end,
             GAMGui.name
         )
+    else
+        playerEntryHandle.achievementLabel:SetHandler("OnMouseUp", nil, GAMGui.name)
     end
 end
 
@@ -150,15 +158,23 @@ function GAMGui.GetPlayerEntryHandle(playerEntry)
 end
 
 function GAMGui.GetAchievementLabelString(playerEntry)
-    local newLabelString = "→ "
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
 
-    if not playerEntry.selectedLinkedAchievement then
-        newLabelString = newLabelString .. "No achievement linked."
-    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
-        newLabelString = newLabelString .. "Manually accepted."
-    elseif playerEntry.selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
-        newLabelString = newLabelString .. playerEntry.selectedLinkedAchievement.achievementLink.linkString
+    if not selectedLinkedAchievement then
+        return "No achievement linked."
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
+        return "Manually accepted."
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+        return selectedLinkedAchievement.achievementLink.linkString
     end
+end
 
-    return newLabelString
+function GAMGui.GetAchievementDateLabelString(playerEntry)
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
+
+    if not selectedLinkedAchievement or selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
+        return ""
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+        return selectedLinkedAchievement.achievementLink.date .. ", " .. selectedLinkedAchievement.achievementLink.time
+    end
 end
