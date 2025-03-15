@@ -47,7 +47,6 @@ function GAM.ExtractLinkedAchievementsFromText(text)
 end
 
 function GAM.OnChatMessage(eventId, channelType, fromName, text, isCustomerService, fromDisplayName)
-    d("New Chat Message.")
     local playerEntry = GAM.playerList[fromDisplayName]
 
     if not playerEntry then
@@ -113,6 +112,8 @@ function GAM.CreateLinkedAchievement(submissionType, achievementLink)
         name = GetAchievementInfo(achievementLink.achievementId)
     end
 
+    local isCompleted = achievementLink.progress > 0 and achievementLink.timestamp > 0
+
     return {
         name = name,
         submission = {
@@ -120,7 +121,7 @@ function GAM.CreateLinkedAchievement(submissionType, achievementLink)
             createdAt = os.clock()
         },
         achievementLink = achievementLink,
-        isValid = true
+        isValid = isCompleted
     }
 end
 
