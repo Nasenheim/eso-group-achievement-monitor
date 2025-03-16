@@ -108,11 +108,11 @@ end
 
 function GAM.CreateLinkedAchievement(submissionType, achievementLink)
     local name = nil
+    local isCompleted = false
     if achievementLink then
         name = GetAchievementInfo(achievementLink.achievementId)
+        isCompleted = achievementLink.progress > 0 and achievementLink.timestamp > 0
     end
-
-    local isCompleted = achievementLink.progress > 0 and achievementLink.timestamp > 0
 
     return {
         name = name,
@@ -121,25 +121,36 @@ function GAM.CreateLinkedAchievement(submissionType, achievementLink)
             createdAt = os.clock()
         },
         achievementLink = achievementLink,
-        isValid = isCompleted
+        isValid = submissionType == GAM.SUBMISSION_TYPES.MANUAL or
+            (submissionType == GAM.SUBMISSION_TYPES.AUTO and isCompleted)
     }
 end
 
-function GAM.CreatePlayerEntry(index, playerName)
+function GAM.CreatePlayerEntry(index, unitTag)
+    local displayName = GetUnitDisplayName(unitTag)
+    local isChampion = IsUnitChampion(unitTag)
+
+    local level
+    if isChampion then
+        level = GetUnitChampionPoints(unitTag)
+    else
+        level = GetUnitLevel(unitTag)
+    end
+
     return {
         index = index,
-        playerName = playerName,
+        playerName = displayName,
+        isChampion = isChampion,
+        level = level,
         selectedLinkedAchievement = nil,
         linkedAchievements = {},
         linkedAchievementsCount = 0
     }
 end
 
-function GAM.AddGroupMember(playerName)
-    GAM.groupSize = GAM.groupSize + 1
-
-    local newPlayerEntry = GAM.CreatePlayerEntry(GAM.groupSize, playerName)
-    GAM.playerList[playerName] = newPlayerEntry
+function GAM.AddGroupMember(unitTag)
+    local newPlayerEntry = GAM.CreatePlayerEntry(GAM.groupSize, unitTag)
+    GAM.playerList[newPlayerEntry.playerName] = newPlayerEntry
 
     GAM.gui.UpdatePlayerEntry(newPlayerEntry)
 end
@@ -171,17 +182,15 @@ function GAM.SyncGroupMembers()
     GAM.groupSize = GetGroupSize()
 
     if GAM.groupSize < GAM.MIN_PLAYER_COUNT then
-        GAM.groupSize = 0
-        GAM.AddGroupMember(GAM.selfPlayerName)
+        GAM.groupSize = 1
+        GAM.AddGroupMember('player')
     else
         for index = 1, GAM.groupSize do
             local unitTag = GetGroupUnitTagByIndex(index)
 
             if unitTag then
-                local displayName = GetUnitDisplayName(unitTag)
-
-                local newPlayerEntry = GAM.CreatePlayerEntry(index, displayName)
-                GAM.playerList[displayName] = newPlayerEntry
+                local newPlayerEntry = GAM.CreatePlayerEntry(index, unitTag)
+                GAM.playerList[newPlayerEntry.playerName] = newPlayerEntry
             else
                 d("Could not find GroupUnitTag " .. index)
             end
@@ -195,7 +204,18 @@ function GAM.OnGroupMemberJoined(eventCode, memberCharacterName, memberDisplayNa
     if memberDisplayName == GAM.selfPlayerName then
         GAM.SyncGroupMembers()
     else
-        GAM.AddGroupMember(memberDisplayName)
+        GAM.groupSize = GAM.groupSize + 1
+        for index = 1, GAM.groupSize do
+            local unitTag = GetGroupUnitTagByIndex(index)
+
+            if unitTag then
+                local displayName = GetUnitDisplayName(unitTag)
+                if memberDisplayName == displayName then
+                    GAM.AddGroupMember(unitTag)
+                    break
+                end
+            end
+        end
     end
 end
 
