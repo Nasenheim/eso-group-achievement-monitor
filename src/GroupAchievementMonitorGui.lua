@@ -43,6 +43,11 @@ function GAMGui.SetupWindow()
 
         newPlayerEntryHandle.display = GetControl(newPlayerEntryHandle.control, "Display")
 
+        newPlayerEntryHandle.playerChampionIcon = GetControl(newPlayerEntryHandle.display, "ChampionIcon")
+
+        newPlayerEntryHandle.playerLevelLabel = GetControl(newPlayerEntryHandle.display, "PlayerLevel")
+        newPlayerEntryHandle.playerLevelLabel:SetText("1234")
+
         newPlayerEntryHandle.playerNameLabel = GetControl(newPlayerEntryHandle.display, "PlayerName")
         newPlayerEntryHandle.playerNameLabel:SetText("@PlayerName")
 
@@ -109,6 +114,14 @@ function GAMGui.UpdatePlayerEntry(playerEntry)
     local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
 
     playerEntryHandle.control:SetHidden(false)
+
+    if playerEntry.isChampion then
+        playerEntryHandle.playerChampionIcon:SetHidden(false)
+    else
+        playerEntryHandle.playerChampionIcon:SetHidden(true)
+    end
+
+    playerEntryHandle.playerLevelLabel:SetText(playerEntry.level)
 
     playerEntryHandle.playerNameLabel:SetText(playerEntry.playerName)
 

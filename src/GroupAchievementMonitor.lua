@@ -177,6 +177,8 @@ function GAM.RemoveGroupMember(playerName)
     GAM.playerList[playerName] = nil
 end
 
+-- This function needs to be called with zo_callLater() because some values might not be queryable
+-- yet with GroupUnitTags.
 function GAM.SyncGroupMembers()
     GAM.playerList = {}
     GAM.groupSize = GetGroupSize()
@@ -185,14 +187,15 @@ function GAM.SyncGroupMembers()
         GAM.groupSize = 1
         GAM.AddGroupMember('player')
     else
-        for index = 1, GAM.groupSize do
+        local entryIndex = 1
+        for index = 1, GAM.MAX_PLAYER_COUNT do
             local unitTag = GetGroupUnitTagByIndex(index)
 
             if unitTag then
-                local newPlayerEntry = GAM.CreatePlayerEntry(index, unitTag)
+                local newPlayerEntry = GAM.CreatePlayerEntry(entryIndex, unitTag)
                 GAM.playerList[newPlayerEntry.playerName] = newPlayerEntry
-            else
-                d("Could not find GroupUnitTag " .. index)
+
+                entryIndex = entryIndex + 1
             end
         end
     end
@@ -202,10 +205,10 @@ end
 
 function GAM.OnGroupMemberJoined(eventCode, memberCharacterName, memberDisplayName, isLocalPlayer)
     if memberDisplayName == GAM.selfPlayerName then
-        GAM.SyncGroupMembers()
+        zo_callLater(GAM.SyncGroupMembers, 50)
     else
         GAM.groupSize = GAM.groupSize + 1
-        for index = 1, GAM.groupSize do
+        for index = 1, GAM.MAX_PLAYER_COUNT do
             local unitTag = GetGroupUnitTagByIndex(index)
 
             if unitTag then
@@ -228,7 +231,7 @@ function GAM.OnGroupMemberLeft(
     memberDisplayName
 )
     if memberDisplayName == GAM.selfPlayerName then
-        GAM.SyncGroupMembers()
+        zo_callLater(GAM.SyncGroupMembers, 50)
     else
         GAM.RemoveGroupMember(memberDisplayName)
     end
@@ -246,7 +249,6 @@ function GAM.Init()
     GAM.playerList = {}
 
     SLASH_COMMANDS[GAM.slashCommand] = GAM.ProcessSlashCommand
-    -- SLASH_COMMANDS["/gam_sync"] = GAM.SyncGroupMembers
 
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_JOINED, GAM.OnGroupMemberJoined)
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_LEFT, GAM.OnGroupMemberLeft)

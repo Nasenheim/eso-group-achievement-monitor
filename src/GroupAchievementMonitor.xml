@@ -91,15 +91,26 @@
                     <Controls>
                         <!-- <Backdrop name="$(parent)BG" inherits="ZO_DefaultBackdrop" alpha="0.25"
                         /> -->
-
+                        <Texture name="$(parent)ChampionIcon"
+                            textureFile="/esoui/art/champion/gamepad/gp_champion_icon.dds">
+                            <Dimensions x="20" y="20" />
+                            <Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT"
+                                offsetY="1" />
+                        </Texture>
+                        <Label name="$(parent)PlayerLevel" font="ZoFontGame">
+                            <Dimensions x="40" y="20" />
+                            <Anchor point="LEFT" relativeTo="$(parent)ChampionIcon"
+                                relativePoint="RIGHT" offsetY="-1" />
+                        </Label>
                         <Label name="$(parent)PlayerName" font="ZoFontGame" wrapMode="ELLIPSIS">
-                            <Dimensions x="390" y="20" />
-                            <Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+                            <Dimensions x="330" y="20" />
+                            <Anchor point="LEFT" relativeTo="$(parent)PlayerLevel"
+                                relativePoint="RIGHT" />
                         </Label>
 
                         <Label name="$(parent)IndentedArrow" font="ZoFontGame" text="→">
                             <Dimensions x="20" y="20" />
-                            <Anchor point="TOPLEFT" relativeTo="$(parent)PlayerName"
+                            <Anchor point="BOTTOMLEFT" relativeTo="$(parent)"
                                 relativePoint="BOTTOMLEFT"
                                 offsetX="10" />
                         </Label>
