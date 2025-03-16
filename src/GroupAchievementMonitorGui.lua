@@ -143,7 +143,9 @@ function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHan
     end, GAMGui.name)
 
     local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
-    if selectedLinkedAchievement and selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+    if selectedLinkedAchievement and
+        selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO
+    then
         playerEntryHandle.achievementLabel:SetHandler(
             "OnMouseUp",
             function(self, button, ...)
@@ -184,9 +186,15 @@ end
 function GAMGui.GetAchievementDateLabelString(playerEntry)
     local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
 
-    if not selectedLinkedAchievement or selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
+    if not selectedLinkedAchievement or
+        selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL
+    then
         return ""
-    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO and selectedLinkedAchievement.isValid then
-        return selectedLinkedAchievement.achievementLink.date .. ", " .. selectedLinkedAchievement.achievementLink.time
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO and
+        selectedLinkedAchievement.isValid
+    then
+        return selectedLinkedAchievement.achievementLink.date ..
+            ", " ..
+            selectedLinkedAchievement.achievementLink.time
     end
 end
