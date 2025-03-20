@@ -43,11 +43,19 @@ function GAMGui.SetupWindow()
 
         newPlayerEntryHandle.display = GetControl(newPlayerEntryHandle.control, "Display")
 
-        newPlayerEntryHandle.nameLabel = GetControl(newPlayerEntryHandle.display, "Name")
-        newPlayerEntryHandle.nameLabel:SetText("@PlayerName")
+        newPlayerEntryHandle.playerChampionIcon = GetControl(newPlayerEntryHandle.display, "ChampionIcon")
+
+        newPlayerEntryHandle.playerLevelLabel = GetControl(newPlayerEntryHandle.display, "PlayerLevel")
+        newPlayerEntryHandle.playerLevelLabel:SetText("1234")
+
+        newPlayerEntryHandle.playerNameLabel = GetControl(newPlayerEntryHandle.display, "PlayerName")
+        newPlayerEntryHandle.playerNameLabel:SetText("@PlayerName")
 
         newPlayerEntryHandle.achievementLabel = GetControl(newPlayerEntryHandle.display, "Achievement")
-        newPlayerEntryHandle.achievementLabel:SetText("→ Achievement")
+        newPlayerEntryHandle.achievementLabel:SetText("Achievement")
+
+        newPlayerEntryHandle.achievementDateLabel = GetControl(newPlayerEntryHandle.display, "AchievementDate")
+        newPlayerEntryHandle.achievementDateLabel:SetText("Date, Time")
 
         newPlayerEntryHandle.edit = GetControl(newPlayerEntryHandle.control, "Edit")
 
@@ -59,22 +67,19 @@ function GAMGui.SetupWindow()
 end
 
 function GAMGui.SetupPlayerListEntryHandleEventHandlers(playerEntryHandle)
-    playerEntryHandle.control:SetHandler("OnMouseEnter", function(self)
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.control, playerEntryHandle)
+
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.achievementLabel, playerEntryHandle)
+
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.editAcceptManuallyButton, playerEntryHandle)
+    GAMGui.SetupPlayerListEntryHandleHoverHandlers(playerEntryHandle.editRejectManuallyButton, playerEntryHandle)
+end
+
+function GAMGui.SetupPlayerListEntryHandleHoverHandlers(control, playerEntryHandle)
+    control:SetHandler("OnMouseEnter", function(self)
         playerEntryHandle.controlBackdrop:SetHidden(false)
     end, GAMGui.name)
-    playerEntryHandle.control:SetHandler("OnMouseExit", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(true)
-    end, GAMGui.name)
-    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseEnter", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(false)
-    end, GAMGui.name)
-    playerEntryHandle.editAcceptManuallyButton:SetHandler("OnMouseExit", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(true)
-    end, GAMGui.name)
-    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseEnter", function(self)
-        playerEntryHandle.controlBackdrop:SetHidden(false)
-    end, GAMGui.name)
-    playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseExit", function(self)
+    control:SetHandler("OnMouseExit", function(self)
         playerEntryHandle.controlBackdrop:SetHidden(true)
     end, GAMGui.name)
 end
@@ -110,10 +115,21 @@ function GAMGui.UpdatePlayerEntry(playerEntry)
 
     playerEntryHandle.control:SetHidden(false)
 
-    playerEntryHandle.nameLabel:SetText(playerEntry.playerName)
+    if playerEntry.isChampion then
+        playerEntryHandle.playerChampionIcon:SetHidden(false)
+    else
+        playerEntryHandle.playerChampionIcon:SetHidden(true)
+    end
+
+    playerEntryHandle.playerLevelLabel:SetText(playerEntry.level)
+
+    playerEntryHandle.playerNameLabel:SetText(playerEntry.playerName)
 
     local newAchievementLabelString = GAMGui.GetAchievementLabelString(playerEntry)
     playerEntryHandle.achievementLabel:SetText(newAchievementLabelString)
+
+    local newAchievementDateLabelString = GAMGui.GetAchievementDateLabelString(playerEntry)
+    playerEntryHandle.achievementDateLabel:SetText(newAchievementDateLabelString)
 
     GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHandle)
 end
@@ -125,6 +141,25 @@ function GAMGui.UpdatePlayerEntryHandleEventHandlers(playerEntry, playerEntryHan
     playerEntryHandle.editRejectManuallyButton:SetHandler("OnMouseUp", function(self)
         GAM.RejectAchievementManually(playerEntry)
     end, GAMGui.name)
+
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
+    if selectedLinkedAchievement and
+        selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO
+    then
+        playerEntryHandle.achievementLabel:SetHandler(
+            "OnMouseUp",
+            function(self, button, ...)
+                ZO_LinkHandler_OnLinkMouseUp(
+                    selectedLinkedAchievement.achievementLink.linkString,
+                    button,
+                    self
+                )
+            end,
+            GAMGui.name
+        )
+    else
+        playerEntryHandle.achievementLabel:SetHandler("OnMouseUp", nil, GAMGui.name)
+    end
 end
 
 function GAMGui.HidePlayerEntryHandle(playerEntry)
@@ -136,23 +171,30 @@ function GAMGui.GetPlayerEntryHandle(playerEntry)
     return GAMGui.playerEntryHandles[playerEntry.index]
 end
 
-function GAMGui.UpdateAchievementLabel(playerEntry)
-    local playerEntryHandle = GAMGui.GetPlayerEntryHandle(playerEntry)
+function GAMGui.GetAchievementLabelString(playerEntry)
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
 
-    local newLabelString = GAMGui.GetAchievementLabelString(playerEntry)
-    playerEntryHandle.achievementLabel:SetText(newLabelString)
+    if not selectedLinkedAchievement then
+        return "No achievement linked."
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL then
+        return "Manually accepted."
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO then
+        return selectedLinkedAchievement.achievementLink.linkString
+    end
 end
 
-function GAMGui.GetAchievementLabelString(playerEntry)
-    local newLabelString = "→ "
+function GAMGui.GetAchievementDateLabelString(playerEntry)
+    local selectedLinkedAchievement = playerEntry.selectedLinkedAchievement
 
-    if not playerEntry.linkedAchievement then
-        newLabelString = newLabelString .. "No achievement linked."
-    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.AUTO then
-        newLabelString = newLabelString .. "Auto"
-    elseif playerEntry.linkedAchievement.submissionType == GAM.SUBMISSION_TYPES.MANUAL then
-        newLabelString = newLabelString .. "Manually accepted."
+    if not selectedLinkedAchievement or
+        selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.MANUAL
+    then
+        return ""
+    elseif selectedLinkedAchievement.submission.type == GAM.SUBMISSION_TYPES.AUTO and
+        selectedLinkedAchievement.isValid
+    then
+        return selectedLinkedAchievement.achievementLink.date ..
+            ", " ..
+            selectedLinkedAchievement.achievementLink.time
     end
-
-    return newLabelString
 end

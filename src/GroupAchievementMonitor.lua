@@ -14,39 +14,143 @@ GAM.SUBMISSION_TYPES = {
     AUTO = 2
 }
 
+GAM.ACHIEVEMENT_LINK_MATCH_STRING = "|H1:achievement:(%d+):(%d+):(%d+)|h(.-)|h"
+GAM.ACHIEVEMENT_LINK_FORMAT_STRING = "|H1:achievement:<<1>>:<<2>>:<<3>>|h|h"
+
+function GAM.ExtractLinkedAchievementsFromText(text)
+    local achievements = {}
+    local achievementCount = 0
+
+    for achievementId, progress, timestamp in string.gmatch(
+        text,
+        GAM.ACHIEVEMENT_LINK_MATCH_STRING
+    ) do
+        local newAchievementId = tonumber(achievementId)
+        local newProgress = tonumber(progress)
+        local newTimestamp = tonumber(timestamp)
+
+        local newAchievementLink = GAM.CreateAchievementLink(
+            newAchievementId,
+            newProgress,
+            newTimestamp
+        )
+        local newLinkedAchievement = GAM.CreateLinkedAchievement(
+            GAM.SUBMISSION_TYPES.AUTO,
+            newAchievementLink
+        )
+
+        achievementCount = achievementCount + 1
+        achievements[achievementCount] = newLinkedAchievement
+    end
+
+    return achievements
+end
+
 function GAM.OnChatMessage(eventId, channelType, fromName, text, isCustomerService, fromDisplayName)
-    d("New Chat Message.")
+    local playerEntry = GAM.playerList[fromDisplayName]
+
+    if not playerEntry then
+        return
+    end
+
+    local linkedAchievements = GAM.ExtractLinkedAchievementsFromText(text)
+
+    for _, linkedAchievement in pairs(linkedAchievements) do
+        GAM.AddLinkedAchievement(playerEntry, linkedAchievement)
+    end
+end
+
+function GAM.AddLinkedAchievement(playerEntry, linkedAchievement)
+    playerEntry.linkedAchievementsCount = playerEntry.linkedAchievementsCount + 1
+    playerEntry.linkedAchievements[playerEntry.linkedAchievementsCount] = linkedAchievement
+
+    if linkedAchievement.isValid then
+        playerEntry.selectedLinkedAchievement = linkedAchievement
+
+        GAM.gui.UpdatePlayerEntry(playerEntry)
+    end
 end
 
 function GAM.AcceptAchievementManually(playerEntry)
-    playerEntry.linkedAchievement = GAM.CreateLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL)
-    GAM.gui.UpdateAchievementLabel(playerEntry)
+    local newLinkedAchievement = GAM.CreateLinkedAchievement(GAM.SUBMISSION_TYPES.MANUAL, nil)
+    GAM.AddLinkedAchievement(playerEntry, newLinkedAchievement)
 end
 
 function GAM.RejectAchievementManually(playerEntry)
-    playerEntry.linkedAchievement = nil
-    GAM.gui.UpdateAchievementLabel(playerEntry)
+    for _, linkedAchievement in pairs(playerEntry.linkedAchievements) do
+        linkedAchievement.isValid = false
+    end
+
+    playerEntry.selectedLinkedAchievement = nil
+
+    GAM.gui.UpdatePlayerEntry(playerEntry)
 end
 
-function GAM.CreateLinkedAchievement(submissionType)
+function GAM.CreateAchievementLink(achievementId, progress, timestamp)
+    local linkString = zo_strformat(
+        GAM.ACHIEVEMENT_LINK_FORMAT_STRING,
+        achievementId,
+        progress,
+        timestamp
+    )
+
+    local date, time = FormatAchievementLinkTimestamp(tostring(timestamp))
+
     return {
-        submissionType = submissionType
+        linkString = linkString,
+        achievementId = achievementId,
+        progress = progress,
+        timestamp = timestamp,
+        date = date,
+        time = time
     }
 end
 
-function GAM.CreatePlayerEntry(index, playerName)
+function GAM.CreateLinkedAchievement(submissionType, achievementLink)
+    local name = nil
+    local isCompleted = false
+    if achievementLink then
+        name = GetAchievementInfo(achievementLink.achievementId)
+        isCompleted = achievementLink.progress > 0 and achievementLink.timestamp > 0
+    end
+
+    return {
+        name = name,
+        submission = {
+            type = submissionType,
+            createdAt = os.clock()
+        },
+        achievementLink = achievementLink,
+        isValid = submissionType == GAM.SUBMISSION_TYPES.MANUAL or
+            (submissionType == GAM.SUBMISSION_TYPES.AUTO and isCompleted)
+    }
+end
+
+function GAM.CreatePlayerEntry(index, unitTag)
+    local displayName = GetUnitDisplayName(unitTag)
+    local isChampion = IsUnitChampion(unitTag)
+
+    local level
+    if isChampion then
+        level = GetUnitChampionPoints(unitTag)
+    else
+        level = GetUnitLevel(unitTag)
+    end
+
     return {
         index = index,
-        playerName = playerName,
-        linkedAchievement = nil
+        playerName = displayName,
+        isChampion = isChampion,
+        level = level,
+        selectedLinkedAchievement = nil,
+        linkedAchievements = {},
+        linkedAchievementsCount = 0
     }
 end
 
-function GAM.AddGroupMember(playerName)
-    GAM.groupSize = GAM.groupSize + 1
-
-    local newPlayerEntry = GAM.CreatePlayerEntry(GAM.groupSize, playerName)
-    GAM.playerList[playerName] = newPlayerEntry
+function GAM.AddGroupMember(unitTag)
+    local newPlayerEntry = GAM.CreatePlayerEntry(GAM.groupSize, unitTag)
+    GAM.playerList[newPlayerEntry.playerName] = newPlayerEntry
 
     GAM.gui.UpdatePlayerEntry(newPlayerEntry)
 end
@@ -73,24 +177,25 @@ function GAM.RemoveGroupMember(playerName)
     GAM.playerList[playerName] = nil
 end
 
+-- This function needs to be called with zo_callLater() because some values might not be queryable
+-- yet with GroupUnitTags.
 function GAM.SyncGroupMembers()
     GAM.playerList = {}
     GAM.groupSize = GetGroupSize()
 
     if GAM.groupSize < GAM.MIN_PLAYER_COUNT then
-        GAM.groupSize = 0
-        GAM.AddGroupMember(GAM.selfPlayerName)
+        GAM.groupSize = 1
+        GAM.AddGroupMember('player')
     else
-        for index = 1, GAM.groupSize do
+        local entryIndex = 1
+        for index = 1, GAM.MAX_PLAYER_COUNT do
             local unitTag = GetGroupUnitTagByIndex(index)
 
             if unitTag then
-                local displayName = GetUnitDisplayName(unitTag)
+                local newPlayerEntry = GAM.CreatePlayerEntry(entryIndex, unitTag)
+                GAM.playerList[newPlayerEntry.playerName] = newPlayerEntry
 
-                local newPlayerEntry = GAM.CreatePlayerEntry(index, displayName)
-                GAM.playerList[displayName] = newPlayerEntry
-            else
-                d("Could not find GroupUnitTag " .. index)
+                entryIndex = entryIndex + 1
             end
         end
     end
@@ -100,15 +205,33 @@ end
 
 function GAM.OnGroupMemberJoined(eventCode, memberCharacterName, memberDisplayName, isLocalPlayer)
     if memberDisplayName == GAM.selfPlayerName then
-        GAM.SyncGroupMembers()
+        zo_callLater(GAM.SyncGroupMembers, 50)
     else
-        GAM.AddGroupMember(memberDisplayName)
+        GAM.groupSize = GAM.groupSize + 1
+        for index = 1, GAM.MAX_PLAYER_COUNT do
+            local unitTag = GetGroupUnitTagByIndex(index)
+
+            if unitTag then
+                local displayName = GetUnitDisplayName(unitTag)
+                if memberDisplayName == displayName then
+                    GAM.AddGroupMember(unitTag)
+                    break
+                end
+            end
+        end
     end
 end
 
-function GAM.OnGroupMemberLeft(eventCode, memberCharacterName, reason, isLocalPlayer, isLeader, memberDisplayName)
+function GAM.OnGroupMemberLeft(
+    eventCode,
+    memberCharacterName,
+    reason,
+    isLocalPlayer,
+    isLeader,
+    memberDisplayName
+)
     if memberDisplayName == GAM.selfPlayerName then
-        GAM.SyncGroupMembers()
+        zo_callLater(GAM.SyncGroupMembers, 50)
     else
         GAM.RemoveGroupMember(memberDisplayName)
     end
@@ -126,7 +249,6 @@ function GAM.Init()
     GAM.playerList = {}
 
     SLASH_COMMANDS[GAM.slashCommand] = GAM.ProcessSlashCommand
-    -- SLASH_COMMANDS["/gam_sync"] = GAM.SyncGroupMembers
 
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_JOINED, GAM.OnGroupMemberJoined)
     EVENT_MANAGER:RegisterForEvent(GAM.name, EVENT_GROUP_MEMBER_LEFT, GAM.OnGroupMemberLeft)
